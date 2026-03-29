@@ -2,8 +2,7 @@ package com.rdurbina.iodine.service;
 
 import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
 import com.rdurbina.iodine.dto.user.response.UserResponse;
-import com.rdurbina.iodine.error.AppError;
-import com.rdurbina.iodine.error.ErrorType;
+import com.rdurbina.iodine.error.ValidationException;
 import com.rdurbina.iodine.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,21 +34,19 @@ public class UserServiceTest {
     public void shouldFailAsTheUsernameIsTaken() {
         UserCreationRequest request = getValidRequest();
         when(userRepository.existsByUsername(request.username())).thenReturn(true);
-        AppError appError = Assertions.assertThrows(AppError.class, ()-> {
+        Assertions.assertThrows(ValidationException.class, () -> {
             UserResponse userResponse = this.userService.create(request);
         });
         verify(userRepository).existsByUsername(request.username());
-        Assertions.assertEquals(ErrorType.ALREADY_IN_USE, appError.getErrorType());
     }
 
     @Test
     public void shouldFailAsTheEmailIsTaken() {
         UserCreationRequest request = getValidRequest();
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
-        AppError appError = Assertions.assertThrows(AppError.class, ()-> {
+        Assertions.assertThrows(ValidationException.class, () -> {
             UserResponse userResponse = this.userService.create(request);
         });
         verify(userRepository).existsByEmail(request.email());
-        Assertions.assertEquals(ErrorType.ALREADY_IN_USE, appError.getErrorType());
     }
 }

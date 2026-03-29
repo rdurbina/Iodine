@@ -1,5 +1,6 @@
 package com.rdurbina.iodine.model;
 
+import com.rdurbina.iodine.error.FieldType;
 import lombok.*;
 
 @Builder
@@ -14,11 +15,19 @@ public class User {
     private String email;
     private String password;
 
-    public enum Field {
-        ID,
-        USERNAME,
-        FULL_NAME,
-        EMAIL,
-        PASSWORD
+    @Getter
+    public enum Field implements FieldType {
+        ID("Id"),
+        USERNAME("Username"),
+        FULL_NAME("FullName"),
+        EMAIL("Email"),
+        PASSWORD("Password");
+
+        private final String name;
+
+        Field(String name) {
+            this.name = name;
+        }
     }
+
 }

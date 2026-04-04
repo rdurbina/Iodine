@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class ValidationException extends RuntimeException {
+public class ConflictException extends RuntimeException {
     private final List<ErrorDetail> details;
 
-    public ValidationException(String message) {
+    public ConflictException(String message) {
         super(message);
         this.details = new ArrayList<>();
     }

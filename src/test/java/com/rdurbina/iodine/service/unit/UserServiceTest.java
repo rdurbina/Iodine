@@ -1,20 +1,24 @@
-package com.rdurbina.iodine.service;
+package com.rdurbina.iodine.service.unit;
 
+import com.rdurbina.iodine.dto.user.request.LoginRequest;
 import com.rdurbina.iodine.dto.user.request.UpdateEmailRequest;
 import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
 import com.rdurbina.iodine.dto.user.response.UserResponse;
 import com.rdurbina.iodine.error.NotFoundException;
 import com.rdurbina.iodine.error.ConflictException;
+import com.rdurbina.iodine.model.User;
 import com.rdurbina.iodine.repository.UserRepository;
+import com.rdurbina.iodine.security.JwtService;
+import com.rdurbina.iodine.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
-
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,16 +26,30 @@ import static org.mockito.Mockito.when;
 public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtService jwtService;
     @InjectMocks
     private UserService userService;
 
-    public static UserCreationRequest getMockRequest() {
+    public UserCreationRequest getMockRequest() {
         return new UserCreationRequest(
                 "johndoe",
                 "John Doe",
                 "john.doe@example.com",
                 "securePassword123"
         );
+    }
+
+    public User getMockUser() {
+        return User.builder()
+                .id(1L)
+                .username("johndoe")
+                .fullName("John Doe")
+                .email("johndoe123@gmail.com")
+                .password("SomeHashFromApassword1234")
+                .build();
     }
 
     @Test
@@ -68,5 +86,33 @@ public class UserServiceTest {
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
         Assertions.assertThrows(ConflictException.class, ()-> userService.updateEmail(request));
         verify(userRepository).existsByEmail(request.email());
+    }
+
+    @Test
+    public void login_givenInvalidUsername_shouldThrowNotFoundException() {
+        LoginRequest loginRequest = new LoginRequest("johndoe", "StrongAndComplicatedPassword123#!");
+        when(userRepository.findByUsername(loginRequest.username())).thenReturn(Optional.empty());
+        Assertions.assertThrows(NotFoundException.class, ()-> userService.login(loginRequest));
+        verify(userRepository).findByUsername(loginRequest.username());
+    }
+
+    @Test
+    public void login_givenInvalidPassword_shouldThrowBadCredentialsException() {
+        LoginRequest loginRequest = new LoginRequest("johndoe", "StrongAndComplicatedPassword123#!");
+        when(userRepository.findByUsername(loginRequest.username())).thenReturn(Optional.of(getMockUser()));
+        when(passwordEncoder.matches(loginRequest.password(), getMockUser().getPassword())).thenReturn(false);
+        Assertions.assertThrows(BadCredentialsException.class, ()-> userService.login(loginRequest));
+        verify(passwordEncoder).matches(loginRequest.password(), getMockUser().getPassword());
+    }
+
+    @Test
+    public void login_givenCorrectInput_shouldReturnStringToken() {
+        LoginRequest loginRequest = new LoginRequest("johndoe", "StrongAndComplicatedPassword123#!");
+        when(userRepository.findByUsername(loginRequest.username())).thenReturn(Optional.of(getMockUser()));
+        when(passwordEncoder.matches(loginRequest.password(), getMockUser().getPassword())).thenReturn(true);
+        when(jwtService.generateToken(loginRequest.username())).thenReturn("generated-jwt-token");
+        String jwt = userService.login(loginRequest);
+        Assertions.assertEquals("generated-jwt-token", jwt);
+
     }
 }

@@ -1,5 +1,6 @@
 package com.rdurbina.iodine.service;
 
+import com.rdurbina.iodine.dto.user.request.LoginRequest;
 import com.rdurbina.iodine.dto.user.request.UpdateEmailRequest;
 import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
 import com.rdurbina.iodine.dto.user.response.UserResponse;
@@ -11,7 +12,9 @@ import com.rdurbina.iodine.error.response.ErrorDetail;
 import com.rdurbina.iodine.mapper.UserMapper;
 import com.rdurbina.iodine.model.User;
 import com.rdurbina.iodine.repository.UserRepository;
+import com.rdurbina.iodine.security.JwtService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     /*
      * Creates a new user after validating uniqueness constraints.
@@ -56,6 +60,19 @@ public class UserService {
         User persistedUser = this.userRepository.save(newUser);
 
         return UserMapper.toResponse(persistedUser);
+    }
+
+    public String login(LoginRequest loginRequest) {
+        // Retrieve user from DB
+        User user = this.userRepository.findByUsername(loginRequest.username()).orElseThrow(
+                ()-> new NotFoundException("User not found")
+        );
+        // Compare passwords
+        if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+            throw new BadCredentialsException("Bad credentials");
+        }
+        // Issue and return token
+        return this.jwtService.generateToken(user.getUsername());
     }
 
     //TODO: Implement email verification mechanism before updating the email

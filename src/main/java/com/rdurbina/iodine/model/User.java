@@ -1,6 +1,7 @@
 package com.rdurbina.iodine.model;
 
 import com.rdurbina.iodine.error.FieldType;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Builder
@@ -8,7 +9,11 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
+@Table(name = "app_user")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     private String fullName;
     private String username;

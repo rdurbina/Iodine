@@ -3,6 +3,7 @@ package com.rdurbina.iodine.service;
 import com.rdurbina.iodine.dto.user.request.LoginRequest;
 import com.rdurbina.iodine.dto.user.request.UpdateEmailRequest;
 import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
+import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
 import com.rdurbina.iodine.dto.user.response.UserResponse;
 import com.rdurbina.iodine.error.NotFoundException;
 import com.rdurbina.iodine.error.ConflictException;
@@ -31,7 +32,7 @@ public class UserService {
      * @return the created user as a {@link UserResponse}
      * @throws ConflictError if the username or email is already in use
      */
-    public UserResponse create(UserCreationRequest userCreationRequest) {
+    public UserCreationResponse create(UserCreationRequest userCreationRequest) {
         ConflictException conflictException = new ConflictException(ErrorMessages.VALIDATION);
         boolean isUsernameTaken = this.userRepository.existsByUsername(userCreationRequest.username());
         if (isUsernameTaken) {
@@ -59,7 +60,9 @@ public class UserService {
 
         User persistedUser = this.userRepository.save(newUser);
 
-        return UserMapper.toResponse(persistedUser);
+        String token = jwtService.generateToken(persistedUser.getUsername());
+
+        return UserMapper.toCreationResponse(persistedUser, token);
     }
 
     public String login(LoginRequest loginRequest) {

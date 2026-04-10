@@ -1,7 +1,7 @@
 package com.rdurbina.iodine.controller;
 
 import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
-import com.rdurbina.iodine.dto.user.response.UserResponse;
+import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
 import com.rdurbina.iodine.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class UserController {
     public final UserService userService;
 
-    @PostMapping("/users")
-    public ResponseEntity<UserResponse> create(@RequestBody UserCreationRequest userCreationRequest) {
-        UserResponse persistedUser = this .userService.create(userCreationRequest);
+    @PostMapping("/user")
+    public ResponseEntity<UserCreationResponse> create(@RequestBody UserCreationRequest userCreationRequest) {
+        UserCreationResponse persistedUser = this .userService.create(userCreationRequest);
         return ResponseEntity.ok(persistedUser);
     }
 }

@@ -2,7 +2,7 @@ package com.rdurbina.iodine.service.integration;
 
 import com.rdurbina.iodine.dto.user.request.LoginRequest;
 import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
-import com.rdurbina.iodine.dto.user.response.UserResponse;
+import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
 import com.rdurbina.iodine.model.User;
 import com.rdurbina.iodine.repository.UserRepository;
 import com.rdurbina.iodine.security.JwtService;
@@ -37,9 +37,9 @@ public class UserServiceIntegrationTest {
                 "StrongAndComplicatedPassword123#!"
         );
 
-        UserResponse serviceResult = userService.create(mockRequest);
+        UserCreationResponse serviceResult = userService.create(mockRequest);
 
-        Assertions.assertInstanceOf(UserResponse.class, serviceResult);
+        Assertions.assertInstanceOf(UserCreationResponse.class, serviceResult);
     }
 
     @Test

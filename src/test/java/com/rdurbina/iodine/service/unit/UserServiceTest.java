@@ -3,7 +3,7 @@ package com.rdurbina.iodine.service.unit;
 import com.rdurbina.iodine.dto.user.request.LoginRequest;
 import com.rdurbina.iodine.dto.user.request.UpdateEmailRequest;
 import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
-import com.rdurbina.iodine.dto.user.response.UserResponse;
+import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
 import com.rdurbina.iodine.error.NotFoundException;
 import com.rdurbina.iodine.error.ConflictException;
 import com.rdurbina.iodine.model.User;
@@ -57,7 +57,7 @@ public class UserServiceTest {
         UserCreationRequest request = getMockRequest();
         when(userRepository.existsByUsername(request.username())).thenReturn(true);
         Assertions.assertThrows(ConflictException.class, () -> {
-            UserResponse userResponse = this.userService.create(request);
+            UserCreationResponse userCreationResponse = this.userService.create(request);
         });
         verify(userRepository).existsByUsername(request.username());
     }
@@ -67,7 +67,7 @@ public class UserServiceTest {
         UserCreationRequest request = getMockRequest();
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
         Assertions.assertThrows(ConflictException.class, () -> {
-            UserResponse userResponse = this.userService.create(request);
+            UserCreationResponse userCreationResponse = this.userService.create(request);
         });
         verify(userRepository).existsByEmail(request.email());
     }

@@ -1,4 +1,4 @@
-package com.rdurbina.iodine.security;
+package com.rdurbina.iodine.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

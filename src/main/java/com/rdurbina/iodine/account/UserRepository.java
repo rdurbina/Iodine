@@ -1,6 +1,5 @@
-package com.rdurbina.iodine.repository;
+package com.rdurbina.iodine.account;
 
-import com.rdurbina.iodine.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

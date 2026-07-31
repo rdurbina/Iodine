@@ -1,9 +1,8 @@
-package com.rdurbina.iodine.mapper;
+package com.rdurbina.iodine.account;
 
-import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
-import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
-import com.rdurbina.iodine.dto.user.response.UserResponse;
-import com.rdurbina.iodine.model.User;
+import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
+import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
+import com.rdurbina.iodine.account.dto.response.UserResponse;
 
 public class UserMapper {
     public static User toModel(UserCreationRequest userCreationRequest) {

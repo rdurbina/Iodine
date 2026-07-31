@@ -1,4 +1,4 @@
-package com.rdurbina.iodine.model;
+package com.rdurbina.iodine.account;
 
 import com.rdurbina.iodine.error.FieldType;
 import jakarta.persistence.*;

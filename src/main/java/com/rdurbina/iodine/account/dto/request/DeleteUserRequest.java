@@ -1,4 +1,4 @@
-package com.rdurbina.iodine.dto.user.request;
+package com.rdurbina.iodine.account.dto.request;
 
 import com.rdurbina.iodine.error.constant.ErrorCodes;
 import jakarta.validation.constraints.NotNull;

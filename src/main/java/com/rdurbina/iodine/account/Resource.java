@@ -1,4 +1,4 @@
-package com.rdurbina.iodine.model.constant;
+package com.rdurbina.iodine.account;
 
 import lombok.Getter;
 

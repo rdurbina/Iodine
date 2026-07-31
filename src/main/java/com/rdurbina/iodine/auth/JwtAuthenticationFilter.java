@@ -1,4 +1,4 @@
-package com.rdurbina.iodine.security;
+package com.rdurbina.iodine.auth;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

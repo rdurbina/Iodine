@@ -1,4 +1,4 @@
-package com.rdurbina.iodine.security;
+package com.rdurbina.iodine.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

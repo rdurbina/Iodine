@@ -1,12 +1,12 @@
-package com.rdurbina.iodine.service.integration;
+package com.rdurbina.iodine.account.integration;
 
-import com.rdurbina.iodine.dto.user.request.LoginRequest;
-import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
-import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
-import com.rdurbina.iodine.model.User;
-import com.rdurbina.iodine.repository.UserRepository;
-import com.rdurbina.iodine.security.JwtService;
-import com.rdurbina.iodine.service.UserService;
+import com.rdurbina.iodine.account.User;
+import com.rdurbina.iodine.account.UserRepository;
+import com.rdurbina.iodine.account.UserService;
+import com.rdurbina.iodine.account.dto.request.LoginRequest;
+import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
+import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
+import com.rdurbina.iodine.auth.JwtService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

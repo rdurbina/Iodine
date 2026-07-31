@@ -1,7 +1,7 @@
-package com.rdurbina.iodine.security;
+package com.rdurbina.iodine.auth;
 
-import com.rdurbina.iodine.model.User;
-import com.rdurbina.iodine.repository.UserRepository;
+import com.rdurbina.iodine.account.User;
+import com.rdurbina.iodine.account.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

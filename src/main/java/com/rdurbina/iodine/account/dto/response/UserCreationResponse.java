@@ -1,4 +1,4 @@
-package com.rdurbina.iodine.dto.user.response;
+package com.rdurbina.iodine.account.dto.response;
 
 public record UserCreationResponse(
         Long id,

@@ -1,8 +1,7 @@
-package com.rdurbina.iodine.controller;
+package com.rdurbina.iodine.account;
 
-import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
-import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
-import com.rdurbina.iodine.service.UserService;
+import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
+import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;

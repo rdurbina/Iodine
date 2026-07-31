@@ -1,15 +1,15 @@
-package com.rdurbina.iodine.service.unit;
+package com.rdurbina.iodine.account.unit;
 
-import com.rdurbina.iodine.dto.user.request.LoginRequest;
-import com.rdurbina.iodine.dto.user.request.UpdateEmailRequest;
-import com.rdurbina.iodine.dto.user.request.UserCreationRequest;
-import com.rdurbina.iodine.dto.user.response.UserCreationResponse;
+import com.rdurbina.iodine.account.User;
+import com.rdurbina.iodine.account.UserRepository;
+import com.rdurbina.iodine.account.UserService;
+import com.rdurbina.iodine.account.dto.request.LoginRequest;
+import com.rdurbina.iodine.account.dto.request.UpdateEmailRequest;
+import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
+import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
+import com.rdurbina.iodine.auth.JwtService;
 import com.rdurbina.iodine.error.NotFoundException;
 import com.rdurbina.iodine.error.ConflictException;
-import com.rdurbina.iodine.model.User;
-import com.rdurbina.iodine.repository.UserRepository;
-import com.rdurbina.iodine.security.JwtService;
-import com.rdurbina.iodine.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

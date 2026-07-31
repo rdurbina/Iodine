@@ -10,14 +10,24 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "app_user")
+@Table(
+        name = "app_user",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_app_user_username", columnNames = "username"),
+                @UniqueConstraint(name = "uk_app_user_email", columnNames = "email")
+        }
+)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+    @Column(nullable = false, length = 30)
     private String fullName;
+    @Column(nullable = false, length = 20)
     private String username;
+    @Column(nullable = false)
     private String email;
+    @Column(nullable = false)
     private String password;
 
     @Getter

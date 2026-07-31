@@ -20,7 +20,6 @@ public class UserMapper {
                 user.getFullName(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getPassword(),
                 token
         );
     }

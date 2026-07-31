@@ -4,6 +4,10 @@ package com.rdurbina.iodine.error.constant;
 public final class ErrorCodes {
     public static final String REQUIRED = "Required";
     public static final String TOO_SHORT = "TooShort";
+    public static final String TOO_LONG = "TooLong";
     public static final String INVALID_FORMAT = "InvalidFormat";
     public static final String ALREADY_IN_USE = "AlreadyInUse";
+
+    private ErrorCodes() {
+    }
 }

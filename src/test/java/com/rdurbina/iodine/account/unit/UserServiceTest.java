@@ -10,6 +10,7 @@ import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
 import com.rdurbina.iodine.auth.JwtService;
 import com.rdurbina.iodine.error.NotFoundException;
 import com.rdurbina.iodine.error.ConflictException;
+import com.rdurbina.iodine.error.constant.ErrorCodes;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +44,7 @@ public class UserServiceTest {
                 "johndoe",
                 "John Doe",
                 "john.doe@example.com",
-                "securePassword123"
+                "Password!"
         );
     }
 
@@ -56,20 +62,61 @@ public class UserServiceTest {
     public void create_givenInvalidUsername_shouldThrowConflictException() {
         UserCreationRequest request = getMockRequest();
         when(userRepository.existsByUsername(request.username())).thenReturn(true);
-        Assertions.assertThrows(ConflictException.class, () -> {
-            UserCreationResponse userCreationResponse = this.userService.create(request);
-        });
+        ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> this.userService.create(request)
+        );
+
+        assertAll(
+                () -> assertEquals(1, exception.getDetails().size()),
+                () -> assertEquals("Username", exception.getDetails().getFirst().field()),
+                () -> assertEquals(ErrorCodes.ALREADY_IN_USE, exception.getDetails().getFirst().code())
+        );
         verify(userRepository).existsByUsername(request.username());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     public void create_givenInvalidEmail_shouldThrowConflictException() {
         UserCreationRequest request = getMockRequest();
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
-        Assertions.assertThrows(ConflictException.class, () -> {
-            UserCreationResponse userCreationResponse = this.userService.create(request);
-        });
+        ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> this.userService.create(request)
+        );
+
+        assertAll(
+                () -> assertEquals(1, exception.getDetails().size()),
+                () -> assertEquals("Email", exception.getDetails().getFirst().field()),
+                () -> assertEquals(ErrorCodes.ALREADY_IN_USE, exception.getDetails().getFirst().code())
+        );
         verify(userRepository).existsByEmail(request.email());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    public void create_givenValidInput_shouldHashPasswordPersistUserAndReturnToken() {
+        UserCreationRequest request = getMockRequest();
+        String encodedPassword = "$2a$encoded-password";
+        when(passwordEncoder.encode(request.password())).thenReturn(encodedPassword);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(1L);
+            return user;
+        });
+        when(jwtService.generateToken(request.username())).thenReturn("generated-jwt-token");
+
+        UserCreationResponse response = userService.create(request);
+
+        assertAll(
+                () -> assertEquals(1L, response.id()),
+                () -> assertEquals(request.username(), response.username()),
+                () -> assertEquals(request.email(), response.email()),
+                () -> assertEquals("generated-jwt-token", response.jwt())
+        );
+        verify(passwordEncoder).encode(request.password());
+        verify(userRepository).save(any(User.class));
+        verify(jwtService).generateToken(request.username());
     }
 
     @Test

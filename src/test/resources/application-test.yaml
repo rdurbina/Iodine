@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:public
+    generate-unique-name: true
     driver-class-name: org.h2.Driver
     username: sa
     password: password
@@ -17,5 +17,5 @@ spring:
       mode: always
 
 jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
+  secret: test-secret-key-that-is-at-least-32-bytes-long
+  expiration: 3600000

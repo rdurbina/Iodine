@@ -5,7 +5,6 @@ public record UserCreationResponse(
         String fullName,
         String username,
         String email,
-        String password,
         String jwt
 ) {
 }

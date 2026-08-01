@@ -1,5 +1,6 @@
 package com.rdurbina.iodine.account.unit;
 
+import com.rdurbina.iodine.account.dto.request.LoginRequest;
 import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
 import com.rdurbina.iodine.error.constant.ErrorCodes;
 import jakarta.validation.ConstraintViolation;
@@ -69,8 +70,24 @@ class UserCreationRequestValidationTest {
         assertViolation(request("john", "John", "j@example.com", "Password"), "password", ErrorCodes.INVALID_FORMAT);
     }
 
+    @Test
+    void login_blankCredentials_areRejected() {
+        LoginRequest request = new LoginRequest("", "");
+
+        assertViolation(request, "username", ErrorCodes.REQUIRED);
+        assertViolation(request, "password", ErrorCodes.REQUIRED);
+    }
+
     private void assertViolation(UserCreationRequest request, String field, String code) {
-        Set<ConstraintViolation<UserCreationRequest>> violations = validator.validate(request);
+        assertViolationFor(request, field, code);
+    }
+
+    private void assertViolation(LoginRequest request, String field, String code) {
+        assertViolationFor(request, field, code);
+    }
+
+    private <T> void assertViolationFor(T request, String field, String code) {
+        Set<ConstraintViolation<T>> violations = validator.validate(request);
         long matchingViolations = violations.stream()
                 .filter(violation -> violation.getPropertyPath().toString().equals(field))
                 .filter(violation -> violation.getMessage().equals(code))

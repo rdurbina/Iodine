@@ -6,7 +6,8 @@ import lombok.Getter;
 @Getter
 public enum ErrorType {
     VALIDATION("ValidationError"),
-    NOT_FOUND("NotFound");
+    NOT_FOUND("NotFound"),
+    AUTHENTICATION("AuthenticationError");
 
     private final String type;
     ErrorType(String type) {

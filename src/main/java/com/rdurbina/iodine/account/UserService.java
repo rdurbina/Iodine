@@ -65,11 +65,11 @@ public class UserService {
     public String login(LoginRequest loginRequest) {
         // Retrieve user from DB
         User user = this.userRepository.findByUsername(loginRequest.username()).orElseThrow(
-                ()-> new NotFoundException("User not found")
+                () -> new BadCredentialsException(ErrorMessages.BAD_CREDENTIALS)
         );
         // Compare passwords
         if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
-            throw new BadCredentialsException("Bad credentials");
+            throw new BadCredentialsException(ErrorMessages.BAD_CREDENTIALS);
         }
         // Issue and return token
         return this.jwtService.generateToken(user.getUsername());

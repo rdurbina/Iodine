@@ -112,4 +112,31 @@ class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("InvalidRequest"))
                 .andExpect(jsonPath("$.details").isEmpty());
     }
+
+    @Test
+    void login_validCredentials_returnsJwt() throws Exception {
+        createUser();
+
+        mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginRequest("johndoe", "Password!")))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertTrue(!result.getResponse().getContentAsString().isBlank()));
+    }
+
+    private void createUser() throws Exception {
+        mockMvc.perform(post("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_REQUEST))
+                .andExpect(status().isCreated());
+    }
+
+    private String loginRequest(String username, String password) {
+        return """
+                {
+                  "username": "%s",
+                  "password": "%s"
+                }
+                """.formatted(username, password);
+    }
 }

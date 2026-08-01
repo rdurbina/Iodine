@@ -8,10 +8,10 @@ import com.rdurbina.iodine.account.dto.request.UpdateEmailRequest;
 import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
 import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
 import com.rdurbina.iodine.auth.JwtService;
-import com.rdurbina.iodine.error.NotFoundException;
 import com.rdurbina.iodine.error.ConflictException;
+import com.rdurbina.iodine.error.NotFoundException;
 import com.rdurbina.iodine.error.constant.ErrorCodes;
-import org.junit.jupiter.api.Assertions;
+import com.rdurbina.iodine.error.constant.ErrorMessages;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,17 +19,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -39,7 +41,7 @@ public class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    public UserCreationRequest getMockRequest() {
+    private UserCreationRequest getMockRequest() {
         return new UserCreationRequest(
                 "johndoe",
                 "John Doe",
@@ -48,7 +50,7 @@ public class UserServiceTest {
         );
     }
 
-    public User getMockUser() {
+    private User getMockUser() {
         return User.builder()
                 .id(1L)
                 .username("johndoe")
@@ -59,12 +61,13 @@ public class UserServiceTest {
     }
 
     @Test
-    public void create_givenInvalidUsername_shouldThrowConflictException() {
+    void create_givenInvalidUsername_shouldThrowConflictException() {
         UserCreationRequest request = getMockRequest();
         when(userRepository.existsByUsername(request.username())).thenReturn(true);
+
         ConflictException exception = assertThrows(
                 ConflictException.class,
-                () -> this.userService.create(request)
+                () -> userService.create(request)
         );
 
         assertAll(
@@ -77,12 +80,13 @@ public class UserServiceTest {
     }
 
     @Test
-    public void create_givenInvalidEmail_shouldThrowConflictException() {
+    void create_givenInvalidEmail_shouldThrowConflictException() {
         UserCreationRequest request = getMockRequest();
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
+
         ConflictException exception = assertThrows(
                 ConflictException.class,
-                () -> this.userService.create(request)
+                () -> userService.create(request)
         );
 
         assertAll(
@@ -95,7 +99,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void create_givenValidInput_shouldHashPasswordPersistUserAndReturnToken() {
+    void create_givenValidInput_shouldHashPasswordPersistUserAndReturnToken() {
         UserCreationRequest request = getMockRequest();
         String encodedPassword = "$2a$encoded-password";
         when(passwordEncoder.encode(request.password())).thenReturn(encodedPassword);
@@ -119,47 +123,72 @@ public class UserServiceTest {
         verify(jwtService).generateToken(request.username());
     }
 
+    // TODO: Email update tests are incomplete as of now because OTP code generation is not yet implemented
+
     @Test
-    public void updateEmail_givenInvalidUserId_shouldThrowNotFoundException() {
+    void updateEmail_givenInvalidUserId_shouldThrowNotFoundException() {
         UpdateEmailRequest request = new UpdateEmailRequest(1L, "john.doe@example.com");
         when(userRepository.findById(request.id())).thenReturn(Optional.empty());
-        Assertions.assertThrows(NotFoundException.class, ()-> userService.updateEmail(request));
+
+        assertThrows(NotFoundException.class, () -> userService.updateEmail(request));
+
         verify(userRepository).findById(request.id());
     }
 
     @Test
-    public void updateEmail_givenInvalidEmail_shouldThrowConflictException() {
+    void updateEmail_givenInvalidEmail_shouldThrowConflictException() {
         UpdateEmailRequest request = new UpdateEmailRequest(1L, "john.doe@example.com");
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
-        Assertions.assertThrows(ConflictException.class, ()-> userService.updateEmail(request));
+
+        assertThrows(ConflictException.class, () -> userService.updateEmail(request));
+
         verify(userRepository).existsByEmail(request.email());
     }
 
     @Test
-    public void login_givenInvalidUsername_shouldThrowNotFoundException() {
-        LoginRequest loginRequest = new LoginRequest("johndoe", "StrongAndComplicatedPassword123#!");
-        when(userRepository.findByUsername(loginRequest.username())).thenReturn(Optional.empty());
-        Assertions.assertThrows(NotFoundException.class, ()-> userService.login(loginRequest));
-        verify(userRepository).findByUsername(loginRequest.username());
+    void login_givenUnknownUsername_shouldThrowGenericBadCredentialsException() {
+        LoginRequest request = new LoginRequest("unknown", "Password!");
+        when(userRepository.findByUsername(request.username())).thenReturn(Optional.empty());
+
+        BadCredentialsException exception = assertThrows(
+                BadCredentialsException.class,
+                () -> userService.login(request)
+        );
+
+        assertEquals(ErrorMessages.BAD_CREDENTIALS, exception.getMessage());
+        verify(userRepository).findByUsername(request.username());
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(jwtService, never()).generateToken(any());
     }
 
     @Test
-    public void login_givenInvalidPassword_shouldThrowBadCredentialsException() {
-        LoginRequest loginRequest = new LoginRequest("johndoe", "StrongAndComplicatedPassword123#!");
-        when(userRepository.findByUsername(loginRequest.username())).thenReturn(Optional.of(getMockUser()));
-        when(passwordEncoder.matches(loginRequest.password(), getMockUser().getPassword())).thenReturn(false);
-        Assertions.assertThrows(BadCredentialsException.class, ()-> userService.login(loginRequest));
-        verify(passwordEncoder).matches(loginRequest.password(), getMockUser().getPassword());
+    void login_givenWrongPassword_shouldThrowGenericBadCredentialsException() {
+        LoginRequest request = new LoginRequest("johndoe", "WrongPassword!");
+        User user = getMockUser();
+        when(userRepository.findByUsername(request.username())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(false);
+
+        BadCredentialsException exception = assertThrows(
+                BadCredentialsException.class,
+                () -> userService.login(request)
+        );
+
+        assertEquals(ErrorMessages.BAD_CREDENTIALS, exception.getMessage());
+        verify(passwordEncoder).matches(request.password(), user.getPassword());
+        verify(jwtService, never()).generateToken(any());
     }
 
     @Test
-    public void login_givenCorrectInput_shouldReturnStringToken() {
-        LoginRequest loginRequest = new LoginRequest("johndoe", "StrongAndComplicatedPassword123#!");
-        when(userRepository.findByUsername(loginRequest.username())).thenReturn(Optional.of(getMockUser()));
-        when(passwordEncoder.matches(loginRequest.password(), getMockUser().getPassword())).thenReturn(true);
-        when(jwtService.generateToken(loginRequest.username())).thenReturn("generated-jwt-token");
-        String jwt = userService.login(loginRequest);
-        Assertions.assertEquals("generated-jwt-token", jwt);
+    void login_givenCorrectInput_shouldReturnToken() {
+        LoginRequest request = new LoginRequest("johndoe", "Password!");
+        User user = getMockUser();
+        when(userRepository.findByUsername(request.username())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(true);
+        when(jwtService.generateToken(request.username())).thenReturn("generated-jwt-token");
 
+        String jwt = userService.login(request);
+
+        assertEquals("generated-jwt-token", jwt);
+        verify(jwtService).generateToken(request.username());
     }
 }

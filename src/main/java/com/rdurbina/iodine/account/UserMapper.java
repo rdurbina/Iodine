@@ -1,6 +1,7 @@
 package com.rdurbina.iodine.account;
 
 import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
+import com.rdurbina.iodine.account.dto.request.UpdateUserRequest;
 import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
 import com.rdurbina.iodine.account.dto.response.UserResponse;
 
@@ -24,13 +25,18 @@ public class UserMapper {
         );
     }
 
+    public static void updateModel(User user, UpdateUserRequest updateUserRequest) {
+        if (updateUserRequest.fullName() != null) {
+            user.setFullName(updateUserRequest.fullName());
+        }
+    }
+
     public static UserResponse toResponse(User user) {
         return new UserResponse(
                 user.getId(),
                 user.getFullName(),
                 user.getUsername(),
-                user.getEmail(),
-                user.getPassword()
+                user.getEmail()
         );
     }
 }

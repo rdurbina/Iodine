@@ -1,15 +1,20 @@
 package com.rdurbina.iodine.account;
 
 import com.rdurbina.iodine.account.dto.request.LoginRequest;
+import com.rdurbina.iodine.account.dto.request.UpdateUserRequest;
 import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
 import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
+import com.rdurbina.iodine.account.dto.response.UserResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.security.Principal;
 
 @RestController
 @AllArgsConstructor
@@ -25,5 +30,13 @@ public class UserController {
     @PostMapping("/login")
     public String login(@Valid @RequestBody LoginRequest loginRequest) {
         return this.userService.login(loginRequest);
+    }
+
+    @PatchMapping("/user")
+    public UserResponse update(
+            @Valid @RequestBody UpdateUserRequest updateUserRequest,
+            Principal principal
+    ) {
+        return this.userService.update(principal.getName(), updateUserRequest);
     }
 }

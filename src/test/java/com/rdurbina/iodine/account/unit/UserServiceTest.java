@@ -5,8 +5,10 @@ import com.rdurbina.iodine.account.UserRepository;
 import com.rdurbina.iodine.account.UserService;
 import com.rdurbina.iodine.account.dto.request.LoginRequest;
 import com.rdurbina.iodine.account.dto.request.UpdateEmailRequest;
+import com.rdurbina.iodine.account.dto.request.UpdateUserRequest;
 import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
 import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
+import com.rdurbina.iodine.account.dto.response.UserResponse;
 import com.rdurbina.iodine.auth.JwtService;
 import com.rdurbina.iodine.error.ConflictException;
 import com.rdurbina.iodine.error.NotFoundException;
@@ -190,5 +192,48 @@ class UserServiceTest {
 
         assertEquals("generated-jwt-token", jwt);
         verify(jwtService).generateToken(request.username());
+    }
+
+    @Test
+    void update_givenFullName_shouldUpdateOnlyFullNameAndPersistUser() {
+        User user = getMockUser();
+        UpdateUserRequest request = new UpdateUserRequest("Jane Doe");
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        UserResponse response = userService.update(user.getUsername(), request);
+
+        assertAll(
+                () -> assertEquals(user.getId(), response.id()),
+                () -> assertEquals("Jane Doe", response.fullName()),
+                () -> assertEquals("johndoe", response.username()),
+                () -> assertEquals("johndoe123@gmail.com", response.email())
+        );
+        verify(userRepository).findByUsername(user.getUsername());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void update_givenOmittedFullName_shouldKeepCurrentValue() {
+        User user = getMockUser();
+        UpdateUserRequest request = new UpdateUserRequest(null);
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        UserResponse response = userService.update(user.getUsername(), request);
+
+        assertEquals("John Doe", response.fullName());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void update_givenUnknownAuthenticatedUser_shouldThrowNotFoundException() {
+        UpdateUserRequest request = new UpdateUserRequest("Jane Doe");
+        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> userService.update("unknown", request));
+
+        verify(userRepository).findByUsername("unknown");
+        verify(userRepository, never()).save(any());
     }
 }

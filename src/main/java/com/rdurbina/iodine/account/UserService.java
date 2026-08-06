@@ -2,6 +2,7 @@ package com.rdurbina.iodine.account;
 
 import com.rdurbina.iodine.account.dto.request.LoginRequest;
 import com.rdurbina.iodine.account.dto.request.UpdateEmailRequest;
+import com.rdurbina.iodine.account.dto.request.UpdateUserRequest;
 import com.rdurbina.iodine.account.dto.request.UserCreationRequest;
 import com.rdurbina.iodine.account.dto.response.UserCreationResponse;
 import com.rdurbina.iodine.account.dto.response.UserResponse;
@@ -73,6 +74,18 @@ public class UserService {
         }
         // Issue and return token
         return this.jwtService.generateToken(user.getUsername());
+    }
+
+    // No inappropriate full name - username filter implemented -> implement by final release
+    public UserResponse update(String username, UpdateUserRequest updateUserRequest) {
+        User user = this.userRepository.findByUsername(username).orElseThrow(
+                () -> new NotFoundException(ErrorMessages.NOT_FOUND)
+        );
+
+        UserMapper.updateModel(user, updateUserRequest);
+        User updatedUser = this.userRepository.save(user);
+
+        return UserMapper.toResponse(updatedUser);
     }
 
     //TODO: Implement email verification mechanism before updating the email

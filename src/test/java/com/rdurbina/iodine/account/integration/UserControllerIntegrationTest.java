@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,6 +17,8 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.blankOrNullString;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -124,11 +127,93 @@ class UserControllerIntegrationTest {
                 .andExpect(result -> assertTrue(!result.getResponse().getContentAsString().isBlank()));
     }
 
+    @Test
+    void update_authenticatedRequest_updatesOnlyNonCriticalFields() throws Exception {
+        String jwt = createUserAndLogin();
+        String request = """
+                {
+                  "fullName": "  Jane Doe  ",
+                  "username": "janedoe",
+                  "email": "jane.doe@example.com",
+                  "password": "DifferentPassword!"
+                }
+                """;
+
+        mockMvc.perform(patch("/user")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.fullName").value("Jane Doe"))
+                .andExpect(jsonPath("$.username").value("johndoe"))
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"))
+                .andExpect(jsonPath("$.password").doesNotExist());
+
+        User persistedUser = userRepository.findByUsername("johndoe").orElseThrow();
+        assertEquals("Jane Doe", persistedUser.getFullName());
+        assertEquals("john.doe@example.com", persistedUser.getEmail());
+        assertTrue(passwordEncoder.matches("Password!", persistedUser.getPassword()));
+    }
+
+    @Test
+    void update_omittedFullName_keepsCurrentValue() throws Exception {
+        String jwt = createUserAndLogin();
+
+        mockMvc.perform(patch("/user")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("John Doe"));
+
+        User persistedUser = userRepository.findByUsername("johndoe").orElseThrow();
+        assertEquals("John Doe", persistedUser.getFullName());
+    }
+
+    @Test
+    void update_blankFullName_returnsValidationErrorWithoutUpdatingUser() throws Exception {
+        String jwt = createUserAndLogin();
+
+        mockMvc.perform(patch("/user")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\": \"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorType").value("ValidationError"))
+                .andExpect(jsonPath("$.message").value("ValidationFailed"))
+                .andExpect(jsonPath("$.url").value("/user"))
+                .andExpect(jsonPath("$.details[0].field").value("FullName"))
+                .andExpect(jsonPath("$.details[0].code").value("Required"));
+
+        User persistedUser = userRepository.findByUsername("johndoe").orElseThrow();
+        assertEquals("John Doe", persistedUser.getFullName());
+    }
+
+    @Test
+    void update_unauthenticatedRequest_isRejected() throws Exception {
+        mockMvc.perform(patch("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\": \"Jane Doe\"}"))
+                .andExpect(status().isForbidden());
+    }
+
     private void createUser() throws Exception {
         mockMvc.perform(post("/user")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_REQUEST))
                 .andExpect(status().isCreated());
+    }
+
+    private String createUserAndLogin() throws Exception {
+        createUser();
+        return mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginRequest("johndoe", "Password!")))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
     }
 
     private String loginRequest(String username, String password) {
